@@ -1,32 +1,45 @@
-﻿using Sparql.Algebra.Evaluators;
+﻿using System;
 using Sparql.Algebra.GraphSources;
-using Sparql.Algebra.Rows;
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using Sparql.Algebra.RDF;
+using Sparql.Algebra.Trees;
 
 namespace Sparql.Algebra.Maps
 {
+    /// <summary>
+    /// Bind variables to constants specified in the query
+    /// </summary>
     public class BindMap : UnivariateMap
     {
-        public Dictionary<string, object> BindingDictionary { get; }
+        private readonly Dictionary<List<Term>, object> _bindingDictionary;
 
-        public BindMap(IMap map, Dictionary<string, object> bindingDictionary):base(map)
+        /// <summary>
+        /// Constructor for the Bind map
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="bindingDictionary"></param>
+        public BindMap(IMap map, Dictionary<List<Term>, object> bindingDictionary):base(map)
         {
-            BindingDictionary = bindingDictionary;
+            _bindingDictionary = bindingDictionary;
         }
 
-        public override IEnumerable<IMultiSetRow> EvaluateInternal<T>(IGraphSource source)
+        /// <summary>
+        /// Evaluates the Bind Map.
+        /// </summary>
+        /// <param name="source">query target</param>
+        public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            var set = InputMap.EvaluateInternal<T>(source);
-
-            //return new signature
-            yield return set.First();
-
-            //bind result mappings
-            foreach (IMultiSetRow row in set.Skip(1))
+            foreach (var tree in InputMap.Evaluate<T>(source))
             {
-                yield return MultiSetAlgebra.BindRow((ResultRow)row, BindingDictionary);
+                foreach (var binding in _bindingDictionary)
+                {
+                    if (tree.Find(binding.Key) != null)
+                    {
+                        tree.Find(binding.Key).Data = binding.Value;
+                    }
+                }
+
+                yield return tree;
             }
         }
     }

@@ -1,81 +1,65 @@
 ﻿using Sparql.Algebra.GraphSources;
-using Sparql.Algebra.Rows;
 using System.Collections.Generic;
-using System.Linq;
+using Sparql.Algebra.RDF;
+using Sparql.Algebra.Trees;
 
 namespace Sparql.Algebra.Maps
 {
-    public class JoinMap:BivariateMap
+    /// <summary>
+    /// Join two query results
+    /// </summary>
+    public class JoinMap : BivariateMap
     {
-        public JoinMap(IMap map1, IMap map2):base(map1, map2)
+        private readonly List<JoinAddressPair> _addressPairList;
+
+        /// <summary>
+        /// Constructor for the join map
+        /// </summary>
+        /// <param name="map1"></param>
+        /// <param name="map2"></param>
+        /// <param name="addressPairList"></param>
+        public JoinMap(IMap map1, IMap map2, List<JoinAddressPair> addressPairList):base(map1, map2)
         {
+            _addressPairList = addressPairList;
         }
 
-        public override IEnumerable<IMultiSetRow> EvaluateInternal<T>(IGraphSource source)
+        /// <summary>
+        /// Evaluates the join map
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            var set1 = InputMap1.EvaluateInternal<T>(source);
-            var set2 = InputMap2.EvaluateInternal<T>(source);
+            List<LabelledTreeNode<object, Term>> tempSet = null;
 
-            //Using this temp set is important to avoid posting a new query every time the sequence is rewinded
-            List<IMultiSetRow> tempSet = null;
-
-            //get common variables
-            var signature1 = (SignatureRow)set1.First();
-            var signature2 = (SignatureRow)set2.First();
-            var commonVariables = MultiSetAlgebra.GetCommonVariables(signature1, signature2);
-
-            //return new signature
-            yield return MultiSetAlgebra.JoinSignatures(signature1, signature2, commonVariables);
-
-            //return result mappings
-            foreach (var row1 in set1.Skip(1))
+            foreach (var treeBase in InputMap1.Evaluate<T>(source))
             {
                 if (tempSet == null)
                 {
-                    tempSet = new List<IMultiSetRow>();
+                    tempSet = new List<LabelledTreeNode<object, Term>>();
 
-                    foreach (var row2 in set2.Skip(1))
+                    foreach (var treeJoin in InputMap2.Evaluate<T>(source))
                     {
-                        tempSet.Add(row2);
+                        tempSet.Add(treeJoin);
 
-                        if (MultiSetAlgebra.Compatible((ResultRow)row1, (ResultRow)row2, commonVariables))
+                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
                         {
-                            yield return MultiSetAlgebra.JoinRows((ResultRow)row1, (ResultRow)row2, commonVariables);
+                            yield return JoinHelper.Join(treeBase, treeJoin, _addressPairList);
                         }
                     }
                 }
-
                 else
                 {
-                    foreach (var row2 in tempSet)
+                    foreach (var treeJoin in tempSet)
                     {
-                        if (MultiSetAlgebra.Compatible((ResultRow)row1, (ResultRow)row2, commonVariables))
+                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
                         {
-                            yield return MultiSetAlgebra.JoinRows((ResultRow)row1, (ResultRow)row2, commonVariables);
+                            yield return JoinHelper.Join(treeBase, treeJoin, _addressPairList);
                         }
                     }
                 }
-                
             }
-        }
-
-        public override BaseMap Optimize()
-        {
-            InputMap1 = InputMap1.Optimize();
-            InputMap2 = InputMap2.Optimize();
-
-            var map1 = InputMap1 as BGPMap;
-            var map2 = InputMap2 as BGPMap;
-
-            if (map1 != null && map1.Limit == null && map1.Offset == null)
-            {
-                if (map2 != null && map2.Limit == null && map2.Offset == null)
-                {
-                    return new BGPMap(map1.StatementList.Concat(map2.StatementList));
-                }
-            }
-
-            return this;
         }
     }
 }

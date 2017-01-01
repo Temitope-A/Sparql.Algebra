@@ -1,10 +1,18 @@
 {
+  "name": "Sparql.Algebra",
   "title": "Sparql Algebra",
+  "authors": [ "Temitope Ajileye" ],
+  "language": "en-GB",
   "copyright": "MIT",
   "description": "Sparql Query Language algebra specification",
-  "version": "0.1.18",
+  "version": "0.2.3",
 
   "dependencies": {
+    "Microsoft.Extensions.Configuration": "1.0.0",
+    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0",
+    "Microsoft.Extensions.Configuration.Binder": "1.0.0",
+    "Microsoft.Extensions.Configuration.FileExtensions": "1.0.0",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0",
     "NETStandard.Library": "1.5.0-rc2-24027"
   },
 
@@ -14,9 +22,22 @@
     }
   },
 
+  "buildOptions": {
+    "xmlDoc": true
+  },
+
+  "packOptions": {
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Temitope-A/Sparql.Algebra"
+    }
+  },
+
   "scripts": {
     "postcompile": [
-      "dotnet pack --no-build --configuration %compile:Configuration%"
+      //"dotnet pack --no-build --configuration %compile:Configuration%"
+      "dotnet pack --output C:\\LibraryPackages --no-build --configuration %compile:Configuration%"
     ]
   }
 }
+

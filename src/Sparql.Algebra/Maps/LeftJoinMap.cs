@@ -1,80 +1,89 @@
 ﻿using Sparql.Algebra.GraphSources;
-using Sparql.Algebra.Rows;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Sparql.Algebra.RDF;
+using Sparql.Algebra.Trees;
 
 namespace Sparql.Algebra.Maps
 {
+    /// <summary>
+    /// Left join map
+    /// </summary>
     public class LeftJoinMap : BivariateMap
     {
-        public Func<ResultRow, bool> Expression { get; }
+        private readonly Func<LabelledTreeNode<object, Term>, bool> _expression;
 
-        public LeftJoinMap(IMap map1, IMap map2, Func<ResultRow, bool> expression = null):base(map1, map2)
+        private readonly List<JoinAddressPair> _addressPairList;
+
+        /// <summary>
+        /// Constructor for a left join map
+        /// </summary>
+        /// <param name="map1"></param>
+        /// <param name="map2"></param>
+        /// <param name="addressPairList"></param>
+        /// <param name="expression"></param>
+        public LeftJoinMap(IMap map1, IMap map2, List<JoinAddressPair> addressPairList, Func<LabelledTreeNode<object, Term>, bool> expression = null):base(map1, map2)
         {
             if (expression == null)
             {
-                Expression = s => true;
+                _expression = s => true;
             }
             else
             {
-                Expression = expression;
+                _expression = expression;
             }
+
+            _addressPairList = addressPairList;
         }
 
-        public override IEnumerable<IMultiSetRow> EvaluateInternal<T>(IGraphSource source)
+        /// <summary>
+        /// Evaluates the left join map
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            var set1 = InputMap1.EvaluateInternal<T>(source);
-            var set2 = InputMap2.EvaluateInternal<T>(source);
+            List<LabelledTreeNode<object, Term>> tempSet = null;
 
-            //Using this temp set is important to avoid posting a new query every time the sequence is rewinded
-            List<IMultiSetRow> tempSet = null;
-
-            //get common variables
-            var signature1 = (SignatureRow)set1.First();
-            var signature2 = (SignatureRow)set2.First();
-            var commonVariables = MultiSetAlgebra.GetCommonVariables(signature1, signature2);
-
-            //return new signature
-            yield return MultiSetAlgebra.JoinSignatures(signature1, signature2, commonVariables);
-
-            //return result mappings
-            foreach (var row1 in set1.Skip(1))
+            foreach (var treeBase in InputMap1.Evaluate<T>(source))
             {
-                bool flag = true;
+                bool treeBaseIsCompatible = false;
 
                 if (tempSet == null)
                 {
-                    tempSet = new List<IMultiSetRow>();
+                    tempSet = new List<LabelledTreeNode<object, Term>>();
 
-                    foreach (var row2 in set2.Skip(1))
+                    foreach (var treeJoin in InputMap2.Evaluate<T>(source))
                     {
-                        tempSet.Add(row2);
+                        tempSet.Add(treeJoin);
 
-                        if (MultiSetAlgebra.Compatible((ResultRow)row1, (ResultRow)row2, commonVariables) && Expression(MultiSetAlgebra.JoinRows((ResultRow)row1, (ResultRow)row2, commonVariables)))
+                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
                         {
-                            flag = false;
-                            yield return MultiSetAlgebra.JoinRows((ResultRow)row1, (ResultRow)row2, commonVariables);
+                            var joinedTree = JoinHelper.Join(treeBase, treeJoin, _addressPairList);
+                            if (_expression(joinedTree))
+                            {
+                                treeBaseIsCompatible = true;
+                                yield return joinedTree;
+                            }
                         }
                     }
                 }
-
                 else
                 {
-                    foreach (var row2 in tempSet)
+                    foreach (var treeJoin in tempSet)
                     {
-                        if (MultiSetAlgebra.Compatible((ResultRow)row1, (ResultRow)row2, commonVariables) && Expression(MultiSetAlgebra.JoinRows((ResultRow)row1, (ResultRow)row2, commonVariables)))
+                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
                         {
-                            flag = false;
-                            yield return MultiSetAlgebra.JoinRows((ResultRow)row1, (ResultRow)row2, commonVariables);
+                            treeBaseIsCompatible = true;
+                            yield return JoinHelper.Join(treeBase, treeJoin, _addressPairList);
                         }
                     }
                 }
 
-                if (flag)
+                if (!treeBaseIsCompatible)
                 {
-                    var signatureExtension = signature2.VariableList.Where(x => !commonVariables.Contains(x)).ToArray();
-                    yield return MultiSetAlgebra.ExtendRow((ResultRow)row1, signatureExtension);
+                    yield return treeBase;
                 }
             }
         }

@@ -1,21 +1,37 @@
-﻿using Sparql.Algebra.GraphSources;
-using Sparql.Algebra.Rows;
+﻿using System;
+using Sparql.Algebra.GraphSources;
 using System.Collections.Generic;
+using Sparql.Algebra.RDF;
+using Sparql.Algebra.Trees;
 
 namespace Sparql.Algebra.Maps
 {
+    /// <summary>
+    /// Represents a change source map.
+    /// </summary>
     public class ChangeSourceMap : UnivariateMap
     {
-        public IGraphSource Source { get; }
+        private readonly IGraphSource _source;
 
+        /// <summary>
+        /// Change the query target for all subqueries
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="source"></param>
         public ChangeSourceMap(IMap map, IGraphSource source) : base(map)
         {
-            Source = source;
+            _source = source;
         }
 
-        public override IEnumerable<IMultiSetRow> EvaluateInternal<T>(IGraphSource source)
+        /// <summary>
+        /// Evaluates the Change source map
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">query target</param>
+        /// <returns></returns>
+        public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            foreach (var item in InputMap.EvaluateInternal<T>(Source))
+            foreach (var item in InputMap.Evaluate<T>(_source))
             {
                 yield return item;
             }

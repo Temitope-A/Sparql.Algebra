@@ -4,20 +4,24 @@ using Sparql.Algebra.RDF;
 using Sparql.Algebra.Test.Constants;
 using Sparql.Algebra.Test.Mocks;
 using Sparql.Algebra.Trees;
-using Xunit;
 using System.Linq;
+using Xunit;
 
 namespace Sparql.Algebra.Test
 {
-    public class BgpMapTest
+    public class UnionMapTest
     {
         [Fact]
         public void AllResultsAreReturned()
         {
-            var map = new BgpMap(new LabelledTreeNode<object, Term>(null));
+            var map1 = new BgpMap(new LabelledTreeNode<object, Term>(null));
+            var map2 = new BgpMap(new LabelledTreeNode<object, Term>(null));
+
+            var map = new UnionMap(map1, map2);
+
             var results = map.Evaluate<MockEvaluator>(new GraphSource(TestUris.MathematiciansRepoUri));
 
-            Assert.Equal(8, results.Count());
+            Assert.Equal(16, results.Count());
         }
     }
 }

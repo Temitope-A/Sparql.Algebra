@@ -1,33 +1,38 @@
 ﻿using Sparql.Algebra.GraphSources;
-using Sparql.Algebra.Rows;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Sparql.Algebra.RDF;
+using Sparql.Algebra.Trees;
 
 namespace Sparql.Algebra.Maps
 {
+    /// <summary>
+    /// Filter the result of subqueries by a boolean expression
+    /// </summary>
     public class ExpressionFilterMap : UnivariateMap
     {
-        public Func<ResultRow, bool> Expression { get; }
+        private readonly Func<LabelledTreeNode<object, Term>, bool> _expression;
 
-        public ExpressionFilterMap(IMap map, Func<ResultRow, bool> expression):base(map)
+        /// <summary>
+        /// Constructor for the expression filter map
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="expression"></param>
+        public ExpressionFilterMap(IMap map, Func<LabelledTreeNode<object, Term>, bool> expression):base(map)
         {
-            Expression = expression;
+            _expression = expression;
         }
 
-        public override IEnumerable<IMultiSetRow> EvaluateInternal<T>(IGraphSource source)
+        /// <summary>
+        /// Evaluates the expression filter map
+        /// </summary>
+        public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            var set = InputMap.EvaluateInternal<T>(source);
-
-            //yield signature
-            yield return (SignatureRow)set.First();
-
-            //filter
-            foreach (var row in set.Skip(1))
+            foreach (var tree in InputMap.Evaluate<T>(source))
             {
-                if (Expression((ResultRow)row))
+                if (_expression(tree))
                 {
-                    yield return row;
+                    yield return tree;
                 }
             }
         }

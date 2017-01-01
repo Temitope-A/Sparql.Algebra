@@ -1,45 +1,41 @@
-﻿using Sparql.Algebra.Rows;
+﻿using System;
 using System.Collections.Generic;
-using System;
-using System.Linq;
 using Sparql.Algebra.GraphSources;
+using Sparql.Algebra.RDF;
+using Sparql.Algebra.Trees;
 
 namespace Sparql.Algebra.Maps
 {
+    /// <summary>
+    /// Set union of the sub maps
+    /// </summary>
     public class UnionMap:BivariateMap
     {
+        /// <summary>
+        /// Constructor for the union map
+        /// </summary>
+        /// <param name="map1"></param>
+        /// <param name="map2"></param>
         public UnionMap(IMap map1, IMap map2):base(map1, map2)
         {
         }
 
-        public override IEnumerable<IMultiSetRow> EvaluateInternal<T>(IGraphSource source)
-        {
-            var set1 = InputMap1.EvaluateInternal<T>(source);
-            var set2 = InputMap2.EvaluateInternal<T>(source);
-
-            //get join matrix
-            var signature1 = (SignatureRow)set1.First();
-            var signature2 = (SignatureRow)set2.First();
-            var commonVariables = MultiSetAlgebra.GetCommonVariables(signature1, signature2);
-
-            //check there is full compatibility of variables
-
-            if (commonVariables.Length != signature1.VariableList.Length)
+        /// <summary>
+        /// Evaluates the union map
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
+        {       
+            foreach (var tree in InputMap1.Evaluate<T>(source))
             {
-                throw new ArgumentException("Invalid union");
+                yield return tree;
             }
 
-            //return first signature
-            yield return signature1;
-
-            foreach (var row in set1.Skip(1))
+            foreach (var tree in InputMap2.Evaluate<T>(source))
             {
-                yield return row;
-            }
-
-            foreach (var row in set2.Skip(1))
-            {
-                yield return row;
+                yield return tree;
             }
         }
     }
