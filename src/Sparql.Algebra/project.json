@@ -6,11 +6,11 @@
   "copyright": "MIT",
   "brief": "Sparql Query Language algebra specification",
   "description": "Sparql Query Language algebra specification",
-  "version": "0.2.10",
+  "version": "0.1.0-0301-1757",
   "versions": [
     {
-      "Version": "0.2",
-      "Description": "Updated version"
+      "Version": "0.1.0",
+      "Description": "Initial version"
     }
   ],
 
@@ -47,8 +47,8 @@
 
   "scripts": {
     "postcompile": [
-      "dotnet pack --output C:\\LibraryPackages --no-build --configuration %compile:Configuration%",
-      "robocopy bin\\Release C:\\LibraryPackages\\%project:Name% /E /MIR"
+      "dotnet pack --output \"\\\\\\jeeves\\Staff\\Temitope Ajileye\\LibraryPackages\" --no-build --configuration %compile:Configuration%",
+      "robocopy bin\\\\Release \"\\\\\\jeeves\\Staff\\Temitope Ajileye\\LibraryPackages\\%project:Name%\" /E /MIR"
     ]
   }
 }
