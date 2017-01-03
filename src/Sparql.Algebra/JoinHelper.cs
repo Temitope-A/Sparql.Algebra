@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sparql.Algebra.RDF;
 using Sparql.Algebra.Trees;
 
@@ -18,6 +17,20 @@ namespace Sparql.Algebra
         /// Address for node in second tree
         /// </summary>
         public List<Term> TreeAddress2 { get; set; }
+        /// <summary>
+        /// Compare the root of the two trees
+        /// </summary>
+        public static JoinAddressPair RootComparison
+        {
+            get
+            {
+                return new JoinAddressPair
+                {
+                    TreeAddress1 = new List<Term>(),
+                    TreeAddress2 = new List<Term>()
+                };
+            }
+        }
     }
 
     /// <summary>
@@ -60,7 +73,7 @@ namespace Sparql.Algebra
             {
                 foreach (var child in localTreeJoin.Find(x.TreeAddress2).Children)
                 {
-                    localTreeBase.Find(x.TreeAddress1).Children.Add(child.Key, child.Value);
+                    localTreeBase.Find(x.TreeAddress1).Children.Add(new DirectedEdge<Term, object>( child.Edge, child.TerminalNode));
                 }
             }
 

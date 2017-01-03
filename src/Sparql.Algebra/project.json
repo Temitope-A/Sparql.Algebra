@@ -4,8 +4,15 @@
   "authors": [ "Temitope Ajileye" ],
   "language": "en-GB",
   "copyright": "MIT",
+  "brief": "Sparql Query Language algebra specification",
   "description": "Sparql Query Language algebra specification",
-  "version": "0.2.3",
+  "version": "0.2.10",
+  "versions": [
+    {
+      "Version": "0.2",
+      "Description": "Updated version"
+    }
+  ],
 
   "dependencies": {
     "Microsoft.Extensions.Configuration": "1.0.0",
@@ -23,7 +30,12 @@
   },
 
   "buildOptions": {
-    "xmlDoc": true
+    "xmlDoc": true,
+    "copyToOutput": {
+      "include": [
+        "project.json"
+      ]
+    }
   },
 
   "packOptions": {
@@ -35,8 +47,8 @@
 
   "scripts": {
     "postcompile": [
-      //"dotnet pack --no-build --configuration %compile:Configuration%"
-      "dotnet pack --output C:\\LibraryPackages --no-build --configuration %compile:Configuration%"
+      "dotnet pack --output C:\\LibraryPackages --no-build --configuration %compile:Configuration%",
+      "robocopy bin\\Release C:\\LibraryPackages\\%project:Name% /E /MIR"
     ]
   }
 }

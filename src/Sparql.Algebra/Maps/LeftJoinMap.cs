@@ -44,47 +44,26 @@ namespace Sparql.Algebra.Maps
         /// <returns></returns>
         public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            List<LabelledTreeNode<object, Term>> tempSet = null;
+            var tempSet = new List<LabelledTreeNode<object, Term>>();
+
+            foreach (var treeJoin in InputMap2.Evaluate<T>(source))
+            {
+                tempSet.Add(treeJoin);
+            }
 
             foreach (var treeBase in InputMap1.Evaluate<T>(source))
             {
-                bool treeBaseIsCompatible = false;
+                var result = treeBase;
 
-                if (tempSet == null)
+                foreach (var treeJoin in tempSet)
                 {
-                    tempSet = new List<LabelledTreeNode<object, Term>>();
-
-                    foreach (var treeJoin in InputMap2.Evaluate<T>(source))
+                    if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
                     {
-                        tempSet.Add(treeJoin);
-
-                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
-                        {
-                            var joinedTree = JoinHelper.Join(treeBase, treeJoin, _addressPairList);
-                            if (_expression(joinedTree))
-                            {
-                                treeBaseIsCompatible = true;
-                                yield return joinedTree;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var treeJoin in tempSet)
-                    {
-                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
-                        {
-                            treeBaseIsCompatible = true;
-                            yield return JoinHelper.Join(treeBase, treeJoin, _addressPairList);
-                        }
+                        result = JoinHelper.Join(result, treeJoin, _addressPairList);
                     }
                 }
 
-                if (!treeBaseIsCompatible)
-                {
-                    yield return treeBase;
-                }
+                yield return result;
             }
         }
     }

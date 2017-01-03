@@ -11,10 +11,5 @@ namespace Sparql.Algebra.GraphSources
         /// Endpoint
         /// </summary>
         Uri EndPoint { get; }
-
-        /// <summary>
-        /// Named graph
-        /// </summary>
-        Uri RdfGraph { get; }
     }
 }

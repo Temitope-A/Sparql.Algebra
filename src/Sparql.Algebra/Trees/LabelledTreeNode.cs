@@ -17,7 +17,7 @@ namespace Sparql.Algebra.Trees
         /// <summary>
         /// Children of current node
         /// </summary>
-        public Dictionary<TE, LabelledTreeNode<TN,TE>> Children { get; }
+        public List<DirectedEdge<TE, TN>> Children { get; }
 
         /// <summary>
         /// Constructor
@@ -26,19 +26,19 @@ namespace Sparql.Algebra.Trees
         public LabelledTreeNode(TN data)
         {
             Data = data;
-            Children = new Dictionary<TE, LabelledTreeNode<TN,TE>>();
+            Children = new List<DirectedEdge<TE, TN>>();
         }
 
         /// <summary>
         /// Add new child given node data
         /// </summary>
         /// <returns></returns>
-        public LabelledTreeNode<TN,TE> AddChild(TE edge, TN childData, bool returnChild = false)
+        public LabelledTreeNode<TN,TE> AddChild(TE edge, TN childData)
         {
             var child = new LabelledTreeNode<TN,TE>(childData);
-            Children.Add(edge, child);
+            Children.Add(new DirectedEdge<TE, TN>(edge, child));
 
-            return returnChild ? child : this;
+            return this;
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Sparql.Algebra.Trees
         /// <returns></returns>
         public LabelledTreeNode<TN,TE> AddChild(TE edge, LabelledTreeNode<TN,TE> child)
         {
-            Children.Add(edge, child);
+            Children.Add(new DirectedEdge<TE, TN>(edge, child));
             return this;
         }
 
@@ -57,7 +57,7 @@ namespace Sparql.Algebra.Trees
         /// <returns></returns>
         public IEnumerable<LabelledTreeNode<TN,TE>> Descend(TE edge)
         {
-            return Children.Where(c => c.Key.Equals(edge)).Select(child => child.Value);
+            return Children.Where(c => c.Edge.Equals(edge)).Select(child => child.TerminalNode);
         }
 
         /// <summary>
@@ -66,11 +66,11 @@ namespace Sparql.Algebra.Trees
         /// <returns></returns>
         public IEnumerable<LabelledTreeNode<TN,TE>> Descend<T>()
         {
-            return Children.Where(c => c.Value.Data.GetType() == typeof(T)).Select(c=>c.Value);
+            return Children.Where(c => c.TerminalNode.Data.GetType() == typeof(T)).Select(c=>c.TerminalNode);
         }
 
         /// <summary>
-        /// Find the node at the given address
+        /// Find the node at the given address. THe address must be unique
         /// </summary>
         /// <param name="treeAddress"></param>
         /// <returns>Returns null if the address is out of bounds</returns>
@@ -95,7 +95,7 @@ namespace Sparql.Algebra.Trees
                 throw new ArgumentException("Invalid tree for a join");
             }
 
-            return Children[currentPivot].Find(treeAddress.Skip(1).ToList());
+            return Children.Single(c=>c.Edge.Equals(currentPivot)).TerminalNode.Find(treeAddress.Skip(1).ToList());
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace Sparql.Algebra.Trees
 
             foreach (var child in Children)
             {
-                node.Children.Add(child.Key, child.Value.Copy());
+                node.Children.Add(new DirectedEdge<TE, TN>(child.Edge, child.TerminalNode.Copy()));
             }
 
             return node;
@@ -130,9 +130,9 @@ namespace Sparql.Algebra.Trees
             }
             foreach (var child in Children)
             {
-                if (!stopCondition(child.Value))
+                if (!stopCondition(child.TerminalNode))
                 {
-                    node.AddChild(child.Key, child.Value.Traverse(nodeVisitor, stopCondition));
+                    node.AddChild(child.Edge, child.TerminalNode.Traverse(nodeVisitor, stopCondition));
                 }
             }
 
@@ -149,7 +149,7 @@ namespace Sparql.Algebra.Trees
 
             foreach (var child in Children)
             {
-                result += string.Format(" {0}: {1};", child.Key, child.Value.Data);
+                result += string.Format(" {0}: {1};", child.Edge, child.TerminalNode.Data);
             }
 
             return Data.ToString() + " {" + result + "}";

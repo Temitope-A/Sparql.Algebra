@@ -31,33 +31,30 @@ namespace Sparql.Algebra.Maps
         /// <returns></returns>
         public override IEnumerable<LabelledTreeNode<object, Term>> Evaluate<T>(IGraphSource source)
         {
-            List<LabelledTreeNode<object, Term>> tempSet = null;
+            var tempSet = new List<LabelledTreeNode<object, Term>>();
+
+            foreach (var treeJoin in InputMap2.Evaluate<T>(source))
+            {
+                tempSet.Add(treeJoin);
+            }
 
             foreach (var treeBase in InputMap1.Evaluate<T>(source))
             {
-                if (tempSet == null)
+                var result = treeBase;
+                bool isCompatible = false;
+
+                foreach (var treeJoin in tempSet)
                 {
-                    tempSet = new List<LabelledTreeNode<object, Term>>();
-
-                    foreach (var treeJoin in InputMap2.Evaluate<T>(source))
+                    if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
                     {
-                        tempSet.Add(treeJoin);
-
-                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
-                        {
-                            yield return JoinHelper.Join(treeBase, treeJoin, _addressPairList);
-                        }
+                        isCompatible = true;
+                        result = JoinHelper.Join(result, treeJoin, _addressPairList);
                     }
                 }
-                else
+
+                if (isCompatible)
                 {
-                    foreach (var treeJoin in tempSet)
-                    {
-                        if (JoinHelper.Compatible(treeBase, treeJoin, _addressPairList))
-                        {
-                            yield return JoinHelper.Join(treeBase, treeJoin, _addressPairList);
-                        }
-                    }
+                    yield return result;
                 }
             }
         }

@@ -13,26 +13,19 @@ namespace Sparql.Algebra.GraphSources
         public Uri EndPoint { get; }
 
         /// <summary>
-        /// Named graph
-        /// </summary>
-        public Uri RdfGraph { get; }
-
-        /// <summary>
         /// Initializes a new graph source
         /// </summary>
-        public GraphSource(string endPoint, string namedGraph = null)
+        public GraphSource(string endPoint)
         {
             EndPoint = new Uri(endPoint);
-            RdfGraph = new Uri(namedGraph);
         }
 
         /// <summary>
         /// Initializes a new graph source
         /// </summary>
-        public GraphSource(Uri endPoint, Uri namedGraph = null)
+        public GraphSource(Uri endPoint)
         {
             EndPoint = endPoint;
-            RdfGraph = namedGraph;
         }
     }
 }
