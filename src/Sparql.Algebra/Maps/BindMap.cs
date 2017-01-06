@@ -35,7 +35,7 @@ namespace Sparql.Algebra.Maps
                 {
                     if (tree.Find(binding.Key) != null)
                     {
-                        tree.Find(binding.Key).Data = binding.Value;
+                        tree.Find(binding.Key).Value = binding.Value;
                     }
                 }
 

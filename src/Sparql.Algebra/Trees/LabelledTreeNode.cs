@@ -12,7 +12,7 @@ namespace Sparql.Algebra.Trees
         /// <summary>
         /// Data associated with the node
         /// </summary>
-        public TN Data { get; set; }
+        public TN Value { get; set; }
 
         /// <summary>
         /// Children of current node
@@ -22,10 +22,10 @@ namespace Sparql.Algebra.Trees
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="data"></param>
-        public LabelledTreeNode(TN data)
+        /// <param name="value"></param>
+        public LabelledTreeNode(TN value)
         {
-            Data = data;
+            Value = value;
             Children = new List<DirectedEdge<TE, TN>>();
         }
 
@@ -66,7 +66,7 @@ namespace Sparql.Algebra.Trees
         /// <returns></returns>
         public IEnumerable<LabelledTreeNode<TN,TE>> Descend<T>()
         {
-            return Children.Where(c => c.TerminalNode.Data.GetType() == typeof(T)).Select(c=>c.TerminalNode);
+            return Children.Where(c => c.TerminalNode.Value.GetType() == typeof(T)).Select(c=>c.TerminalNode);
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Sparql.Algebra.Trees
         /// <returns></returns>
         public LabelledTreeNode<TN,TE> Copy()
         {
-            var node = new LabelledTreeNode<TN,TE>(Data);
+            var node = new LabelledTreeNode<TN,TE>(Value);
 
             foreach (var child in Children)
             {
@@ -123,7 +123,7 @@ namespace Sparql.Algebra.Trees
         /// </returns>
         public LabelledTreeNode<TY, TE> Traverse<TY>(TreeNodeVisitor<TN, TY> nodeVisitor, Func<LabelledTreeNode<TN, TE>, bool> stopCondition = null)
         {
-            var node = new LabelledTreeNode<TY, TE>(nodeVisitor(Data));
+            var node = new LabelledTreeNode<TY, TE>(nodeVisitor(Value));
             if (stopCondition == null)
             {
                 stopCondition = d => false;
@@ -149,10 +149,10 @@ namespace Sparql.Algebra.Trees
 
             foreach (var child in Children)
             {
-                result += string.Format(" {0}: {1};", child.Edge, child.TerminalNode.Data);
+                result += string.Format(" {0}: {1};", child.Edge, child.TerminalNode.Value);
             }
 
-            return Data.ToString() + " {" + result + "}";
+            return Value.ToString() + " {" + result + "}";
         }
     }
 }

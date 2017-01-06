@@ -49,7 +49,7 @@ namespace Sparql.Algebra
         {
             foreach (var x in addressPairList)
             {
-                if (!tree1.Find(x.TreeAddress1).Data.Equals(tree2.Find(x.TreeAddress2).Data))
+                if (!tree1.Find(x.TreeAddress1).Value.Equals(tree2.Find(x.TreeAddress2).Value))
                 {
                     return false;
                 }
