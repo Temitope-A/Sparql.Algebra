@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Sparql.Algebra.Filters;
 using Sparql.Algebra.GraphEvaluators;
 using Sparql.Algebra.GraphSources;
 using Sparql.Algebra.RDF;
@@ -9,7 +11,7 @@ namespace Sparql.Algebra.Test.Mocks
 {
     public class MockEvaluator:IEvaluator
     {
-        public IEnumerable<LabelledTreeNode<object, Term>> Evaluate(LabelledTreeNode<object, Term> queryModel, int? offset, int? limit, IGraphSource source)
+        public IEnumerable<LabelledTreeNode<object, Term>> Evaluate(LabelledTreeNode<object, Term> queryModel, int? offset, int? limit, IFilter filter, IGraphSource source)
         {
             if (source.EndPoint.Equals(TestUris.MathematiciansRepoUri)) //8 mathematicians
             {

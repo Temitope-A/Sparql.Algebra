@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sparql.Algebra.GraphSources;
 using Sparql.Algebra.RDF;
 using Sparql.Algebra.Trees;
+using Sparql.Algebra.Filters;
 
 namespace Sparql.Algebra.GraphEvaluators
 {
@@ -17,8 +18,9 @@ namespace Sparql.Algebra.GraphEvaluators
         /// <param name="queryModel">tree model of the query</param>
         /// <param name="offset">number of solutions to skip</param>
         /// <param name="limit">maximum number of solutions to take</param>
+        /// <param name="filter">a bgp filter </param>
         /// <param name="source">query target</param>
         /// <returns>A collection of trees</returns>
-        IEnumerable<LabelledTreeNode<object, Term>> Evaluate(LabelledTreeNode<object, Term> queryModel, int? offset, int? limit, IGraphSource source);
+        IEnumerable<LabelledTreeNode<object, Term>> Evaluate(LabelledTreeNode<object, Term> queryModel, int? offset, int? limit, IFilter filter, IGraphSource source);
     }
 }
